@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2026年有多少人喜欢你？</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 50%;
+            animation: twinkle 4s infinite;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.8; }
+        }
+        
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        .glow-text {
+            text-shadow: 0 0 30px rgba(233, 196, 106, 0.5);
+        }
+        
+        /* 答题页样式 - 柔和不刺眼 */
+        .quiz-container {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(10px);
+        }
+        
+        .option-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.25s ease;
+            cursor: pointer;
+        }
+        
+        .option-btn:hover, .option-btn:active {
+            background: rgba(233, 196, 106, 0.15);
+            border-color: rgba(233, 196, 106, 0.4);
+            transform: translateX(8px);
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #e9c46a, #f4a261);
+        }
+        
+        .result-card {
+            background: linear-gradient(135deg, rgba(26,26,46,0.98) 0%, rgba(22,33,62,0.95) 100%);
+            border: 1px solid rgba(233,196,106,0.2);
+        }
+        
+        .heart-beat {
+            animation: heartbeat 2s ease-in-out infinite;
+        }
+        
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        #poster-container {
+            position: fixed;
+            left: -9999px;
+            top: 0;
+        }
+        
+        .hidden { display: none !important; }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .start-btn {
+            cursor: pointer;
+            position: relative;
+            z-index: 10;
+            transition: transform 0.2s;
+        }
+        
+        .start-btn:active {
+            transform: scale(0.97);
+        }
+        
+        /* 柔和的装饰光 */
+        .soft-glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.15;
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- 星空背景 -->
+    <div class="stars" id="stars"></div>
+    
+    <!-- 主容器 -->
+    <div class="relative z-10 min-h-screen flex flex-col items-center justify-center p-4">
+        
+        <!-- 首页 -->
+        <div id="home-page" class="text-center max-w-md w-full fade-in">
+            <div class="floating mb-8">
+                <div class="w-28 h-28 mx-auto relative">
+                    <div class="absolute inset-0 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full opacity-40 blur-2xl heart-beat"></div>
+                    <div class="relative w-full h-full flex items-center justify-center text-5xl">✨</div>
+                </div>
+            </div>
+            
+            <p class="text-amber-200/60 text-sm mb-3 tracking-widest">2026 年度测试</p>
+            
+            <h1 class="text-3xl font-bold mb-4 glow-text text-amber-100">
+                今年有多少人喜欢你？
+            </h1>
+            
+            <p class="text-slate-300 mb-8 text-sm leading-relaxed">
+                宇宙正在计算你的2026魅力指数...<br>
+                10道题目，揭晓你的心动数据
+            </p>
+            
+            <button id="start-btn" class="start-btn group relative px-10 py-4 rounded-full overflow-hidden border-0 bg-transparent">
+                <div class="absolute inset-0 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                <span class="relative text-lg font-bold tracking-wider text-white">开始测试</span>
+            </button>
+            
+            <p class="mt-6 text-xs text-slate-500">已有 <span id="counter">256,847</span> 人参与</p>
+        </div>
+        
+        <!-- 答题页 - 简化柔和版 -->
+        <div id="quiz-page" class="hidden w-full max-w-md fade-in">
+            <!-- 进度条 -->
+            <div class="mb-6">
+                <div class="flex justify-between text-xs text-slate-400 mb-2">
+                    <span>问题 <span id="current-q">1</span>/10</span>
+                    <span id="progress-text">10%</span>
+                </div>
+                <div class="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                    <div id="progress-bar" class="progress-bar h-full rounded-full transition-all duration-500" style="width: 10%"></div>
+                </div>
+            </div>
+            
+            <!-- 问题卡片 - 纯色背景，无动画边框 -->
+            <div class="quiz-container rounded-2xl p-6">
+                <h2 id="question-text" class="text-lg font-medium mb-6 leading-relaxed text-slate-100"></h2>
+                
+                <div id="options-container" class="space-y-3">
+                    <!-- 选项动态生成 -->
+                </div>
+            </div>
+            
+            <!-- 题号指示器 -->
+            <div class="flex justify-center mt-6 gap-1.5" id="question-dots">
+                <!-- 圆点动态生成 -->
+            </div>
+        </div>
+        
+        <!-- 结果页 -->
+        <div id="result-page" class="hidden w-full max-w-md text-center fade-in">
+            <div class="result-card rounded-2xl p-8 relative overflow-hidden">
+                <!-- 柔和装饰 -->
+                <div class="soft-glow w-32 h-32 bg-amber-500 top-10 left-10"></div>
+                <div class="soft-glow w-40 h-40 bg-orange-500 bottom-10 right-10"></div>
+                
+                <div class="relative z-10">
+                    <p class="text-amber-200/70 text-sm mb-4">2026 心动数据报告</p>
+                    
+                    <div class="mb-6">
+                        <span id="result-number" class="text-6xl font-bold text-amber-300"></span>
+                        <span class="text-xl text-amber-200/80">人</span>
+                    </div>
+                    
+                    <h3 id="result-title" class="text-xl font-bold mb-4 text-amber-200"></h3>
+                    
+                    <p id="result-desc" class="text-sm text-slate-300 leading-relaxed mb-6"></p>
+                    
+                    <!-- 详细解析 -->
+                    <div class="bg-white/5 rounded-xl p-4 mb-6 text-left border border-white/5">
+                        <p class="text-xs text-amber-200/60 mb-2">你的魅力画像</p>
+                        <p id="result-detail" class="text-sm text-slate-200 leading-relaxed"></p>
+                    </div>
+                    
+                    <!-- 标签 -->
+                    <div id="result-tags" class="flex flex-wrap justify-center gap-2 mb-6"></div>
+                </div>
+            </div>
+            
+            <!-- 操作按钮 -->
+            <div class="mt-6 space-y-3">
+                <button id="poster-btn" class="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 font-bold text-lg text-white border-0 cursor-pointer hover:opacity-95 transition-opacity">
+                    生成专属海报
+                </button>
+                
+                <button id="restart-btn" class="w-full py-3 rounded-xl border border-white/10 text-slate-400 text-sm hover:text-white hover:border-white/20 transition-colors bg-transparent cursor-pointer">
+                    再测一次
+                </button>
+            </div>
+        </div>
+        
+        <!-- 海报生成中提示 -->
+        <div id="poster-loading" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+            <div class="text-center">
+                <div class="w-12 h-12 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mx-auto mb-4"></div>
+                <p class="text-slate-300 text-sm">正在生成海报...</p>
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- 隐藏的海报容器 -->
+    <div id="poster-container">
+        <div id="poster-content" class="w-[375px] h-[667px] relative overflow-hidden" style="background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);">
+            <div class="absolute inset-0" id="poster-stars"></div>
+            
+            <div class="relative z-10 h-full flex flex-col items-center justify-center p-8 text-center">
+                <div class="absolute top-8 left-1/2 -translate-x-1/2 text-3xl">✨</div>
+                
+                <p class="text-amber-200/70 text-xs mb-4 tracking-widest">2026 心动数据报告</p>
+                
+                <div class="mb-4">
+                    <span id="poster-number" class="text-7xl font-bold" style="background: linear-gradient(to right, #e9c46a, #f4a261); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></span>
+                </div>
+                <p class="text-amber-200/80 text-base mb-8">人 在偷偷喜欢你</p>
+                
+                <div class="px-5 py-2.5 rounded-full mb-6 bg-amber-500/20 border border-amber-500/30">
+                    <span id="poster-title" class="text-amber-200 font-bold"></span>
+                </div>
+                
+                <p id="poster-desc" class="text-sm text-slate-300/80 leading-relaxed mb-8 px-4"></p>
+                
+                <div class="mt-auto">
+                    <div class="w-20 h-20 mx-auto rounded-xl bg-white/10 flex items-center justify-center mb-3">
+                        <div class="text-3xl">✨</div>
+                    </div>
+                    <p class="text-xs text-slate-500">扫码测测你的心动数据</p>
+                </div>
+                
+                <p class="absolute bottom-4 text-xs text-slate-600">2026魅力指数测试</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 题目数据 ==========
+        const questions = [
+            {
+                question: "当你走进一个陌生的聚会，你通常会？",
+                options: [
+                    { text: "主动和看起来友好的人搭话", score: 3 },
+                    { text: "找个角落观察，等别人来找我", score: 1 },
+                    { text: "只和认识的人待在一起", score: 2 },
+                    { text: "成为全场焦点，带动气氛", score: 4 }
+                ]
+            },
+            {
+                question: "朋友遇到困难找你倾诉，你的第一反应是？",
+                options: [
+                    { text: "认真倾听，给情感支持", score: 4 },
+                    { text: "直接给解决方案", score: 2 },
+                    { text: "分享自己的类似经历", score: 3 },
+                    { text: "不知道该怎么回应", score: 1 }
+                ]
+            },
+            {
+                question: "社交媒体上，你发布内容的频率是？",
+                options: [
+                    { text: "几乎每天，分享生活点滴", score: 3 },
+                    { text: "精心策划后才发，追求质量", score: 4 },
+                    { text: "很少发，保持神秘感", score: 2 },
+                    { text: "只发工作和重要的事", score: 1 }
+                ]
+            },
+            {
+                question: "有人对你表示好感，但你没感觉，你会？",
+                options: [
+                    { text: "委婉拒绝，保持朋友关系", score: 4 },
+                    { text: "直接说清楚，不拖泥带水", score: 3 },
+                    { text: "慢慢疏远，让对方明白", score: 2 },
+                    { text: "假装不知道，避免尴尬", score: 1 }
+                ]
+            },
+            {
+                question: "你觉得自己最吸引别人的特质是？",
+                options: [
+                    { text: "幽默风趣，让人开心", score: 4 },
+                    { text: "温柔体贴，善解人意", score: 3 },
+                    { text: "独立自信，有主见", score: 3 },
+                    { text: "才华横溢，能力出众", score: 4 }
+                ]
+            },
+            {
+                question: "和异性单独相处时，你通常会？",
+                options: [
+                    { text: "自然大方，像普通朋友", score: 4 },
+                    { text: "有点紧张，但努力找话题", score: 3 },
+                    { text: "刻意表现，想留下好印象", score: 2 },
+                    { text: "尽量避免眼神接触", score: 1 }
+                ]
+            },
+            {
+                question: "过去一年，收到过多少次意外的关心或礼物？",
+                options: [
+                    { text: "经常，感觉被很多人惦记着", score: 4 },
+                    { text: "偶尔，来自亲近的朋友", score: 3 },
+                    { text: "很少，大概一两次", score: 2 },
+                    { text: "几乎没印象了", score: 1 }
+                ]
+            },
+            {
+                question: "你的笑容属于哪种类型？",
+                options: [
+                    { text: "感染力超强，见者开心", score: 4 },
+                    { text: "温暖治愈，让人安心", score: 3 },
+                    { text: "腼腆害羞，带点可爱", score: 3 },
+                    { text: "礼貌性微笑，保持距离", score: 2 }
+                ]
+            },
+            {
+                question: "如果可以给魅力值加个buff，你想要？",
+                options: [
+                    { text: "人见人爱的社交光环", score: 3 },
+                    { text: "让人忍不住想了解的神秘感", score: 4 },
+                    { text: "一开口就让人信服的气场", score: 3 },
+                    { text: "治愈他人心灵的温柔力", score: 4 }
+                ]
+            },
+            {
+                question: "深夜收到一条'在吗'，你觉得最可能是？",
+                options: [
+                    { text: "有人想跟我表白", score: 4 },
+                    { text: "朋友有急事找我帮忙", score: 2 },
+                    { text: "群发消息，不用理", score: 1 },
+                    { text: "单纯想找人聊天", score: 3 }
+                ]
+            }
+        ];
+        
+        // ========== 结果配置 ==========
+        const results = [
+            {
+                min: 10, max: 15,
+                number: "3-5",
+                title: "神秘宝藏型",
+                desc: "你的魅力像深埋的宝石，只有懂你的人才能发现。表面低调，却有过目难忘的独特气质。",
+                detail: "今年有3-5个人在默默关注你，其中可能藏着一份真挚的好感。试着多打开一点心门，让更多人看到你的光芒。",
+                tags: ["内敛深沉", "独特气质", "慢热型魅力"]
+            },
+            {
+                min: 16, max: 22,
+                number: "8-12",
+                title: "温柔治愈型",
+                desc: "你像夜晚的月光，不刺眼却让人感到舒适安心。你的体贴和善良，是很多人心中的小确幸。",
+                detail: "今年有8-12个人被你的温柔打动。你或许不知道，你的一句关心、一个微笑，曾让多少人度过难熬的时刻。",
+                tags: ["善解人意", "温暖治愈", "人缘超好"]
+            },
+            {
+                min: 23, max: 28,
+                number: "15-25",
+                title: "魅力磁场型",
+                desc: "你天生自带吸引力，走到哪里都是话题中心。你的存在本身，就是一种让人想靠近的理由。",
+                detail: "今年有15-25个人对你抱有好感！你的自信、幽默或独特才华，让很多人在不知不觉中被你吸引。",
+                tags: ["自信闪耀", "社交达人", "人气王"]
+            },
+            {
+                min: 29, max: 40,
+                number: "30+",
+                title: "人间理想型",
+                desc: "你是很多人心中的'白月光'，兼具外在吸引力和内在深度。喜欢你的人可能比你想象的更多。",
+                detail: "今年有超过30个人对你心动或暗生好感！你的魅力是多维度的——颜值、性格、才华，或是你活成了别人想成为的样子。",
+                tags: ["全能ACE", "人间理想", "魅力爆棚"]
+            }
+        ];
+        
+        let currentQuestion = 0;
+        let totalScore = 0;
+        let currentResult = null;
+        
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            const posterStars = document.getElementById('poster-stars');
+            
+            for (let i = 0; i < 80; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 4 + 's';
+                star.style.opacity = Math.random() * 0.5 + 0.2;
+                starsContainer.appendChild(star.cloneNode(true));
+                if (posterStars) posterStars.appendChild(star);
+            }
+        }
+        
+        function updateDots() {
+            const container = document.getElementById('question-dots');
+            container.innerHTML = '';
+            for (let i = 0; i < questions.length; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'w-1.5 h-1.5 rounded-full transition-colors ' + 
+                    (i === currentQuestion ? 'bg-amber-400' : 'bg-white/20');
+                container.appendChild(dot);
+            }
+        }
+        
+        function startQuiz() {
+            document.getElementById('home-page').classList.add('hidden');
+            document.getElementById('quiz-page').classList.remove('hidden');
+            document.getElementById('quiz-page').classList.add('fade-in');
+            showQuestion();
+        }
+        
+        function showQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById('current-q').textContent = currentQuestion + 1;
+            document.getElementById('question-text').textContent = q.question;
+            
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progress-bar').style.width = progress + '%';
+            document.getElementById('progress-text').textContent = Math.round(progress) + '%';
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn w-full p-4 rounded-xl text-left text-sm text-slate-200';
+                btn.innerHTML = `<span class="text-amber-400/80 mr-3 font-medium">${['A', 'B', 'C', 'D'][idx]}</span>${opt.text}`;
+                btn.onclick = function() { selectOption(opt.score); };
+                container.appendChild(btn);
+            });
+            
+            updateDots();
+        }
+        
+        function selectOption(score) {
+            totalScore += score;
+            currentQuestion++;
+            
+            if (currentQuestion < questions.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+        
+        function showResult() {
+            document.getElementById('quiz-page').classList.add('hidden');
+            document.getElementById('result-page').classList.remove('hidden');
+            
+            currentResult = results.find(r => totalScore >= r.min && totalScore <= r.max) || results[1];
+            
+            document.getElementById('result-number').textContent = currentResult.number;
+            document.getElementById('result-title').textContent = currentResult.title;
+            document.getElementById('result-desc').textContent = currentResult.desc;
+            document.getElementById('result-detail').textContent = currentResult.detail;
+            
+            const tagsContainer = document.getElementById('result-tags');
+            tagsContainer.innerHTML = '';
+            currentResult.tags.forEach(tag => {
+                const span = document.createElement('span');
+                span.className = 'px-3 py-1 rounded-full text-xs bg-amber-500/15 text-amber-200/80 border border-amber-500/20';
+                span.textContent = tag;
+                tagsContainer.appendChild(span);
+            });
+        }
+        
+        function generatePoster() {
+            const loading = document.getElementById('poster-loading');
+            loading.classList.remove('hidden');
+            
+            document.getElementById('poster-number').textContent = currentResult.number;
+            document.getElementById('poster-title').textContent = currentResult.title;
+            document.getElementById('poster-desc').textContent = currentResult.desc;
+            
+            setTimeout(() => {
+                const element = document.getElementById('poster-content');
+                
+                html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: null,
+                    width: 375,
+                    height: 667
+                }).then(canvas => {
+                    loading.classList.add('hidden');
+                    
+                    const link = document.createElement('a');
+                    link.download = '2026心动数据报告.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    
+                    const preview = document.createElement('div');
+                    preview.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4';
+                    preview.innerHTML = `
+                        <div class="text-center">
+                            <img src="${canvas.toDataURL('image/png')}" class="max-h-[70vh] rounded-lg mb-4">
+                            <p class="text-slate-300 mb-4 text-sm">长按保存图片，分享给朋友吧</p>
+                            <button onclick="this.parentElement.parentElement.remove()" class="px-6 py-2 rounded-full bg-amber-500 text-white text-sm">关闭</button>
+                        </div>
+                    `;
+                    document.body.appendChild(preview);
+                }).catch(err => {
+                    loading.classList.add('hidden');
+                    alert('生成失败，请重试');
+                    console.error(err);
+                });
+            }, 500);
+        }
+        
+        function restartQuiz() {
+            currentQuestion = 0;
+            totalScore = 0;
+            currentResult = null;
+            
+            document.getElementById('result-page').classList.add('hidden');
+            document.getElementById('home-page').classList.remove('hidden');
+            document.getElementById('home-page').classList.add('fade-in');
+        }
+        
+        window.onload = function() {
+            createStars();
+            
+            document.getElementById('start-btn').addEventListener('click', startQuiz);
+            document.getElementById('poster-btn').addEventListener('click', generatePoster);
+            document.getElementById('restart-btn').addEventListener('click', restartQuiz);
+            
+            let count = 256847;
+            setInterval(() => {
+                count += Math.floor(Math.random() * 3);
+                document.getElementById('counter').textContent = count.toLocaleString();
+            }, 3000);
+        };
+    </script>
+</body>
+</html>
